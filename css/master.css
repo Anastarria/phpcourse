@@ -67,7 +67,7 @@ html,body {
 
 .leftf {
   width: 30%;
-  height: 1000px;
+  min-height: 1000px;
   background-color: #6c6b6b;
   float: left;
   border: solid 0.5px;
@@ -76,7 +76,7 @@ html,body {
 
 .formwrap {
   max-width: 400px;
-  height: 575px;
+  min-height: 400px;
   background-color:#9e9d9d;
   border-radius: 15px;
   margin: 70px;
@@ -138,4 +138,9 @@ html,body {
   color: white;
   margin-left: 15px;
   margin-top: 5px;
+}
+.countform {
+  max-width: 300px;
+  min-height: 100px;
+  margin: 5%;
 }
