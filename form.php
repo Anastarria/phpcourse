@@ -22,7 +22,20 @@ if(!empty($_FILES['newfile']))
       echo "There was an error uploading the file, please try again!";
   }
 }
+$filename='index.php';
+$data =[
+    [
+        'Title'=>$_POST['title'],
+        'Description'=>$_POST['descr'],
+        'Thumbnail'=>$_FILES['newfile']
+        ]
 
+];
+foreach($data as $row => $value){
+
+file_put_contents($filename, join('', $tablearray), FILE_APPEND);
+
+}
 ?>
   </body>
 </html>
