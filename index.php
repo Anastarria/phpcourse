@@ -109,5 +109,3 @@ echo $html;
 </body>
 
 </html>
-John Smith
-TitleHorosholicartoon-penguin-icon.jpg
