@@ -67,7 +67,11 @@ html,body {
 
 .leftf {
   width: 30%;
+<<<<<<< HEAD
   height: 1000px;
+=======
+  min-height: 1000px;
+>>>>>>> 90d62ef357f7f5594669b11fd325c2a4ecb89fc1
   background-color: #6c6b6b;
   float: left;
   border: solid 0.5px;
@@ -76,7 +80,11 @@ html,body {
 
 .formwrap {
   max-width: 400px;
+<<<<<<< HEAD
   height: 575px;
+=======
+  min-height: 400px;
+>>>>>>> 90d62ef357f7f5594669b11fd325c2a4ecb89fc1
   background-color:#9e9d9d;
   border-radius: 15px;
   margin: 70px;
@@ -121,6 +129,7 @@ html,body {
 }
 
 .footer {
+<<<<<<< HEAD
   position: fixed;
   left: 0;
   bottom: 0;
@@ -128,3 +137,28 @@ html,body {
   height: 80px;
   background-color: black;
 }
+=======
+  /* position: fixed;
+  left: 0;
+  bottom: 0; */
+  width: 100%;
+  min-height: 80px;
+  background-color: black;
+}
+
+.footercontainer {
+  weight: 200px;
+  height: 100%;
+  display: block;
+  font-size: 16px;
+  font-family: 'Rakkas';
+  color: white;
+  margin-left: 15px;
+  margin-top: 5px;
+}
+.countform {
+  max-width: 300px;
+  min-height: 100px;
+  margin: 5%;
+}
+>>>>>>> 90d62ef357f7f5594669b11fd325c2a4ecb89fc1

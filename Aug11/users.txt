@@ -1,0 +1,2 @@
+user=Anastasia;phone=+777
+user=Kolia;phone=+666
