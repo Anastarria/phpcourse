@@ -87,6 +87,7 @@ function makeRegistration(string $username, string $email, string $password)
   $salt = getRandomSalt();
 
   $users[] = [
+    'role' => 0,
     'username' => $username,
     'email' => $email,
     'salt' => $salt,
@@ -111,6 +112,8 @@ function makeRegistration(string $username, string $email, string $password)
 function showRegisterForm()
 {
   $form = '';
+
+
 
   if ($error = ($_GET['error'] ?? null)) {
     $form .= '
@@ -179,8 +182,8 @@ function getSiteTemplate() : string
                     ' . "Howdy, $user!" . '
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                      <a class="dropdown-item" href="#">Dashboard</a>
-                      <a class="dropdown-item" href="#">Another action</a>
+                      <a class="dropdown-item" href="/?action=logtable">Log Table</a>
+                      <a class="dropdown-item" href="/?action=employeesdata">Employees Data</a>
                       <a class="dropdown-item" href="/?action=logout">Logout</a>
                       </div>
                   </li>
@@ -199,7 +202,6 @@ function getSiteTemplate() : string
                 </ul>
               </div>';
       }
-
 $html .= '
     </nav>
     ';
@@ -210,7 +212,6 @@ $html .= '
     $html .= getBootstrapJS();
     $html .= '</body>';
     $html .= '</html>';
-
     return $html;
 }
 
@@ -263,11 +264,11 @@ if ($user = getAuthUser())
   <h2>Add data to the table using this form</h2>
   <form action="/?action=create" method="POST">
     <div class="form-group">
-      <label class="sr-only" for="inlineFormInputName">Name</label>
+      <label>Name</label>
       <input type="text" name="name" class="form-control" id="validationServer01" placeholder="Name" required>
     </div>
     <div class="form-group">
-      <label class="sr-only" for="exampleInputEmail1">Email address</label>
+      <label>Email address</label>
       <input type="email" name="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com" required>
     </div>
     <div class="form-group">
@@ -312,6 +313,7 @@ function addUserEndpoint()
 {
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     addUserToTable($_POST['name'], $_POST['email'], $_POST['phone']);
+    tableLogEndpoint();
       header("Location: /");
     die();
   }
@@ -335,22 +337,74 @@ function addUserToTable(string $name, string $email, string $phone)
   file_put_contents('tabledata.json', json_encode($users));
 }
 
-//for admin user:
-//
-// if ( is_admin($current_user) ) {
-// 	echo "Вы находитесь в админке";
-// }
-// else {
-// 	echo "Вы просматриваете фронт-энд сайта (тему)";
-// }
+function tableLogEndpoint()
+{
+  date_default_timezone_set('UTC');
+  $posttime = date('l js \if F Y h:i:s A');
 
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    addLogTable($_POST['name'], $_SESSION['user']['username'], $posttime);
+      header("Location: /");
+    die();
+  }
+  mainEndpoint();
+}
 
+function addLogTable(string $name, string $user, string $timelog)
+{
+  $users = [];
 
+  if (file_exists('logtable.json')) {
+    $users = json_decode(file_get_contents('logtable.json'), true);
+  }
 
-// $_SESSION['role'] = "admin"; // this approach will be always same
-// $_SESSION['role'] = $user['Your_User_Role_coulmn_name']; // you need to store dynamic user role into the session
-// if((isset($_SESSION['role']) && $_SESSION['role'] == "admin")){
-//     header("location: Upload.php");
-// }else{
-//     header("location: Home.php");
-// }
+  $users[] = [
+    'name' => $name,
+    'user' => $user,
+    'timelog' => $timelog
+    ];
+
+  file_put_contents('logtable.json', json_encode($users));
+}
+
+function adminCheck()
+{
+  $table = showLogTable();
+  $showtext = "<br>$table %s";
+  // $html = sprintf($showtext, getAuthUser() ?? "<br>You must log in if you wish to make any changes!");
+
+  echo sprintf(getSiteTemplate(), $showtext);
+}
+
+function showLogTable()
+{
+  $html = '';
+
+  $html .= '
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <table class="table" border=1>
+  <thead class="thead-dark">
+  <th>Contact</th>
+  <th>Added By</th>
+  <th>Time</th>
+  </thead>
+  <tbody>';
+
+    foreach (getLogData() as $user) {
+      $html .= "<tr><td>{$user['name']}</td><td>{$user['user']}</td><td>{$user['timelog']}</td></tr>";
+    }
+
+    $html .= '</tbody></table>';
+    if ($user = getAuthUser()) {
+      $html .= "You are logged in as";
+    }
+    ;
+
+  return $html;
+}
+
+function getLogData(): array
+{
+    $jsonString = file_get_contents('logtable.json');
+    return json_decode($jsonString, true) ?? [];
+}
