@@ -87,12 +87,11 @@ function makeRegistration(string $username, string $email, string $password)
   $salt = getRandomSalt();
 
   $users[] = [
-    'role' => 0,
+    'is_admin' => 0,
     'username' => $username,
     'email' => $email,
     'salt' => $salt,
     'password' => md5($salt . $password . $salt)
-    // $role;
   ];
 
   if (strlen($password) < 12) {
@@ -181,9 +180,15 @@ function getSiteTemplate() : string
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     ' . "Howdy, $user!" . '
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                      <a class="dropdown-item" href="/?action=logtable">Log Table</a>
-                      <a class="dropdown-item" href="/?action=employeesdata">Employees Data</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">';
+            if (getAdminUser()) {
+
+                  $html .= '
+                      <a class="dropdown-item" href="/admin.php">Log Table</a>
+                      <a class="dropdown-item" href="/employeesdata.php">Employees Data</a>';
+            }
+                  $html .= '
+                      <a class="dropdown-item" href="/comments.php">Comments</a>
                       <a class="dropdown-item" href="/?action=logout">Logout</a>
                       </div>
                   </li>
@@ -218,7 +223,7 @@ $html .= '
 function getBootstrapHead()
 {
   return '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/styles/styles.css">
   ';
 }
 
@@ -253,6 +258,11 @@ function getRandomSalt(int $length = 32)
 function getAuthUser(): ?string
 {
   return $_SESSION['user']['username'] ?? null;
+}
+
+function getAdminUser(): ?string
+{
+  return $_SESSION['user']['is_admin'] ?? null;
 }
 
 function showPhoneTable()
@@ -367,15 +377,6 @@ function addLogTable(string $name, string $user, string $timelog)
   file_put_contents('logtable.json', json_encode($users));
 }
 
-function adminCheck()
-{
-  $table = showLogTable();
-  $showtext = "<br>$table %s";
-  // $html = sprintf($showtext, getAuthUser() ?? "<br>You must log in if you wish to make any changes!");
-
-  echo sprintf(getSiteTemplate(), $showtext);
-}
-
 function showLogTable()
 {
   $html = '';
@@ -395,10 +396,7 @@ function showLogTable()
     }
 
     $html .= '</tbody></table>';
-    if ($user = getAuthUser()) {
-      $html .= "You are logged in as";
-    }
-    ;
+
 
   return $html;
 }
@@ -406,5 +404,94 @@ function showLogTable()
 function getLogData(): array
 {
     $jsonString = file_get_contents('logtable.json');
+    return json_decode($jsonString, true) ?? [];
+}
+//Comments Functions
+function showCommentsLog()
+{
+  $html = '';
+
+  $html = '<form action="/comments.php?action=create" method="POST">
+  <div class="form-group">
+
+  <div class="form-group">
+    <label for="exampleFormControlTextarea1">Subject</label>
+    <input type="text" name="title" class="form-control" id="validationServer01" placeholder="Subject" required>
+    <label for="exampleFormControlTextarea1">Add Your comment here</label>
+    <textarea class="form-control" name="comment" id="exampleFormControlTextarea1" rows="3" required></textarea>
+  </div>
+  <button type="submit" class="btn btn-dark">Add Comment</button>
+</form><br>';
+
+
+foreach (getComment() as $thread) {
+
+      $html .= "
+      <br> <div class='card'>
+        <div class='card-header'>
+          {$thread['title']}
+        </div>
+        <div class='card-body'>
+          <blockquote class='blockquote mb-0'>
+            <p>{$thread['comment']}</p>
+            <footer class='blockquote-footer'>Added by <cite title='Source Title'>{$thread['addedby']}</cite></footer>
+          </blockquote>
+        </div>
+      </div>
+      <br>
+      ";
+    }
+
+  return $html;
+}
+
+function addThreadEndpoint()
+{
+  {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+      checkForbiddenWords();
+      getComment();
+      header("Location: /comments.php");
+      die();
+    }
+    showCommentsLog();
+  }
+}
+
+function checkForbiddenWords()
+{
+  $forbidden = [
+    'heck',
+    'hell',
+    'corona',
+    'delay'
+  ];
+  $theusercomment = $_POST['comment'];
+  $newcomment = str_ireplace($forbidden, '*****', $theusercomment);
+  addComment($_POST['title'], $newcomment, $_SESSION['user']['username']);
+}
+
+function addComment($title, $comment, $addedby)
+{
+
+  $thread = [];
+
+  if (file_exists('comments.json')) {
+    $thread = json_decode(file_get_contents('comments.json'), true);
+  }
+
+  $thread[] = [
+    'title' => $title,
+    'comment' => $comment,
+    'addedby' => $addedby
+    ];
+  file_put_contents('comments.json', json_encode($thread));
+
+
+}
+
+function getComment(): array
+{
+    $jsonString = file_get_contents('comments.json');
     return json_decode($jsonString, true) ?? [];
 }

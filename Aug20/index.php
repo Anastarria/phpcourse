@@ -18,9 +18,6 @@ switch ($action) {
   case "create":
     addUserEndpoint();
     break;
-  case 'logtable':
-    showLogTable();
-    break;
   case "main":
   default:
     mainEndpoint();
