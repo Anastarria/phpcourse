@@ -39,7 +39,13 @@ function addEmployeeEndpoint()
 function addEmployeeToTable(string $name, string $sex, string $age, int $salary, string $department)
 {
   $users = [];
-
+  if ($age > 55 || $age < 18 || !is_numeric($_POST['age'])) {
+          die('
+            <br><div class="alert alert-warning" role="alert">
+                Failed to add an employee. Only a person above 18 or below 55 can work with the company.
+            </div>
+          ');
+      }
   if (file_exists('employee.json')) {
     $users = json_decode(file_get_contents('employee.json'), true);
   }
@@ -54,6 +60,7 @@ function addEmployeeToTable(string $name, string $sex, string $age, int $salary,
 
   file_put_contents('employee.json', json_encode($users));
 }
+
 
 function showEmployeeTable()
 {
@@ -106,11 +113,42 @@ function showEmployeeTable()
   <th>Salary</th>
   <th>Department</th>
   </thead>
-  <tbody>';
+  <tbody>
+
+  ';
 
     foreach (getEmployeeData() as $user) {
       $html .= "<tr><td>{$user['name']}</td><td>{$user['sex']}</td><td>{$user['age']}</td><td>{$user['salary']}</td><td>{$user['department']}</td></tr>";
     }
 
+    $html .= '
+    </tbody>
+    </table>
+    <br>
+    <h2>Salary report</h2>';
+    $users = json_decode(file_get_contents('employee.json'), true);
+    $salaries = array_column($users, 'salary');
+    $count = (array_sum($salaries));
+    $html .= "
+    <br> <div class='card'>
+      <div class='card-header'>
+        Total Sum paid for all employees per month
+      </div>
+      <div class='card-body'>
+        <blockquote class='blockquote mb-0'>
+          <p>{$count}$</p>
+        </blockquote>
+      </div>
+    </div>
+    <br>
+    ";
+
+    $html .= '
+    <h3>Custom Filters</h3>
+
+
+    ';
+
   return $html;
 }
+//Форма для стат
