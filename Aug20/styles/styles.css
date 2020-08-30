@@ -3,3 +3,8 @@
   justify-content: flex-end;
 }
 
+.customfilters {
+  display: block;
+  float: left;
+  margin-left: 15px;
+}

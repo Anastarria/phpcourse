@@ -350,7 +350,7 @@ function addUserToTable(string $name, string $email, string $phone)
 function tableLogEndpoint()
 {
   date_default_timezone_set('UTC');
-  $posttime = date('l js \if F Y h:i:s A');
+  $posttime = date('l F Y h:i:s A');
 
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     addLogTable($_POST['name'], $_SESSION['user']['username'], $posttime);
