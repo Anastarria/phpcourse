@@ -4,7 +4,7 @@ function loginEndpoint()
 {
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     makeLogin($_POST['email'], $_POST['password']);
-    // header('Location: /');
+    header('Location: /');
     die();
   }
   showLoginForm();
@@ -353,8 +353,8 @@ function tableLogEndpoint()
   $posttime = date('l F Y h:i:s A');
 
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header("Location: /");
     addLogTable($_POST['name'], $_SESSION['user']['username'], $posttime);
-      header("Location: /");
     die();
   }
   mainEndpoint();
@@ -372,7 +372,7 @@ function addLogTable(string $name, string $user, string $timelog)
     'name' => $name,
     'user' => $user,
     'timelog' => $timelog
-    ];
+  ];
 
   file_put_contents('logtable.json', json_encode($users));
 }
@@ -382,7 +382,7 @@ function showLogTable()
   $html = '';
 
   $html .= '
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
   <table class="table" border=1>
   <thead class="thead-dark">
   <th>Contact</th>
@@ -406,7 +406,9 @@ function getLogData(): array
     $jsonString = file_get_contents('logtable.json');
     return json_decode($jsonString, true) ?? [];
 }
+
 //Comments Functions
+
 function showCommentsLog()
 {
   $html = '';
@@ -447,7 +449,6 @@ foreach (getComment() as $thread) {
 
 function addThreadEndpoint()
 {
-  {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       checkForbiddenWords();
       getComment();
@@ -455,7 +456,6 @@ function addThreadEndpoint()
       die();
     }
     showCommentsLog();
-  }
 }
 
 function checkForbiddenWords()
@@ -486,12 +486,192 @@ function addComment($title, $comment, $addedby)
     'addedby' => $addedby
     ];
   file_put_contents('comments.json', json_encode($thread));
-
-
 }
 
 function getComment(): array
 {
     $jsonString = file_get_contents('comments.json');
     return json_decode($jsonString, true) ?? [];
+}
+
+// Employee Data
+
+function getEmployeeData()
+{
+  $jsonString = file_get_contents('employee.json');
+  return json_decode($jsonString, true) ?? [];
+}
+
+function addEmployeeEndpoint()
+{
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header("Location: /employeesdata.php");
+    addEmployeeToTable($_POST['name'], $_POST['sex'], $_POST['age'], $_POST['salary'], $_POST['department']);
+    die();
+  }
+  showEmployeeTable();
+}
+
+function addEmployeeToTable(string $name, string $sex, string $age, int $salary, string $department)
+{
+  $users = [];
+
+  if ($age > 55 || $age < 18 || !is_numeric($_POST['age'])) {
+    header("Location: /employeesdata.php?action=addemployee&error=Failed to add. Only people between 18 and 55 can be hired.");
+    return;
+  }
+
+  if (file_exists('employee.json')) {
+    $users = json_decode(file_get_contents('employee.json'), true);
+  }
+
+  $users[] = [
+    'name' => $name,
+    'sex' => $sex,
+    'age' => $age,
+    'salary' => $salary,
+    'department' => $department
+  ];
+
+  file_put_contents('employee.json', json_encode($users));
+}
+
+function showEmployeeTable()
+{
+  $html = '
+  <h2>Add employee data to the table using this form</h2>
+  <form action="/employeesdata.php?action=addemployee" method="POST">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" name="name" class="form-control" id="exampleFormControlInput1" placeholder="Employee Name" required>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="sex" id="exampleRadios1" value="Male" checked>
+      <label class="form-check-label" for="exampleRadios1">
+        Male
+      </label>
+    </div>
+  <div class="form-check">
+    <input class="form-check-input" type="radio" name="sex" id="exampleRadios1" value="Female" checked>
+      <label class="form-check-label" for="exampleRadios1">
+      Female
+    </label>
+  </div>
+    <div class="form-group">
+      <label>Age</label>
+      <input type="number" name="age" class="form-control" id="exampleFormControlInput1" placeholder="Employee age" required>
+    </div>
+    <div class="form-group">
+      <label>Salary</label>
+      <input type="number" name="salary" class="form-control" id="exampleFormControlInput1" placeholder="$" required>
+    </div>
+    <div class="form-group">
+    <label for="exampleFormControlSelect1">Department</label>
+    <select name ="department" class="form-control" id="exampleFormControlSelect1">
+      <option>HR</option>
+      <option>Customer Support</option>
+      <option>Technical Support</option>
+      <option>Management</option>
+      <option>Lawyers</option>
+    </select>
+  </div>
+    <button type="submit" for="validationDefault01" class="btn btn-dark"">Add Employee</button>
+
+  </form>';
+
+  if ($error = ($_GET['error'] ?? null)) {
+    $html .= '
+      <br><div class="alert alert-warning" role="alert">
+          ' . $error . '
+      </div>
+    ';
+  }
+
+  $html .=  '
+  <table class="table" border=1>
+  <thead class="thead-dark">
+  <th>Name</th>
+  <th>Sex</th>
+  <th>Age</th>
+  <th>Salary</th>
+  <th>Department</th>
+  </thead>
+  <tbody>
+  ';
+
+    foreach (getEmployeeData() as $user) {
+      $html .= "<tr><td>{$user['name']}</td><td>{$user['sex']}</td><td>{$user['age']}</td><td>{$user['salary']}</td><td>{$user['department']}</td></tr>";
+    }
+
+    $html .= '
+    </tbody>
+    </table>';
+
+    $html .= '
+    <br>
+    <h2>Salary report</h2>';
+
+    $users = json_decode(file_get_contents('employee.json'), true);
+    $salaries = array_column($users, 'salary');
+    $count = (array_sum($salaries));
+
+    $female = array_filter($users, function ($user) {
+        return ($user['sex'] == 'Female');
+    });
+    $fsalaries = array_column($female, 'salary');
+    $fcount = (array_sum($fsalaries));
+
+    $below30 = array_filter($users, function ($user) {
+        return ($user['age'] < '30');
+    });
+    $salaries30 = array_column($below30, 'salary');
+    $count30 = (array_sum($salaries30));
+
+    $hr = array_filter($users, function ($user) {
+        return ($user['department'] == 'HR');
+    });
+    $hrsalaries = array_column($hr, 'salary');
+    $hrcount = (array_sum($hrsalaries));
+
+    $cs = array_filter($users, function ($user) {
+        return ($user['department'] == 'Customer Support');
+    });
+    $cssalaries = array_column($cs, 'salary');
+    $cscount = (array_sum($cssalaries));
+
+    $techsup = array_filter($users, function ($user) {
+        return ($user['department'] == 'Technical Support');
+    });
+    $techsalaries = array_column($techsup, 'salary');
+    $techcount = (array_sum($techsalaries));
+
+    $managers = array_filter($users, function ($user) {
+        return ($user['department'] == 'Management');
+    });
+    $topsalaries = array_column($managers, 'salary');
+    $topcount = (array_sum($topsalaries));
+
+    $law = array_filter($users, function ($user) {
+        return ($user['department'] == 'Lawyers');
+    });
+    $lawsalaries = array_column($law, 'salary');
+    $lawcount = (array_sum($lawsalaries));
+
+    $html .= "
+    <table class='table' border=1>
+    <thead class='thead-dark'>
+    <th width='12.5%'>For All</th>
+    <th width='12.5%'>For Women</th>
+    <th width='12.5%'>Below 30</th>
+    <th width='12.5%'>HR</th>
+    <th width='12.5%'>Customer Support</th>
+    <th width='12.5%'>Technical Support</th>
+    <th width='12.5%'>Management</th>
+    <th width='12.5%'>Lawyers</th>
+    </thead>
+    <tbody>
+    <tr><td>{$count}</td><td>{$fcount}</td><td>{$count30}</td><td>{$hrcount}</td><td>{$cscount}</td><td>{$techcount}</td><td>{$topcount}</td><td>{$lawcount}</td></tr>
+    </tbody></table>";
+
+  return $html;
 }
